@@ -92,9 +92,22 @@ class User(ABC):
     def save(self) -> None: ...
     def is_expired(self) -> bool: ...
     def get_basic_info(self) -> UserBasicInfo: ...
+    def get_variable(self, key: str) -> str: ...
+    def set_variable(self, key: str, value: str) -> None: ...
+    def delete_variable(self, key: str) -> None: ...
 ```
 
 SDK 提供了默认的内存实现 `UserInstance`。`is_expired()` 会提前 60 秒返回 `True`，`get_basic_info()` 会请求 `/api/user/info`。
+
+### 用户变量读写
+
+`get_variable` / `set_variable` / `delete_variable` 通过 `/api/varibles` 操作当前用户的变量存储，需要授权时携带 `var:io` scope。
+
+```python
+user.set_variable("theme", "dark")
+value = user.get_variable("theme")
+user.delete_variable("theme")
+```
 
 ### `UserBasicInfo`
 

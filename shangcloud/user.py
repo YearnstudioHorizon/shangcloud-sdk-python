@@ -28,6 +28,18 @@ class User(ABC):
     def get_basic_info(self) -> UserBasicInfo:
         pass
 
+    @abstractmethod
+    def get_variable(self, key: str) -> str:
+        pass
+
+    @abstractmethod
+    def set_variable(self, key: str, value: str) -> None:
+        pass
+
+    @abstractmethod
+    def delete_variable(self, key: str) -> None:
+        pass
+
 
 class UserInstance(User):
     def __init__(self) -> None:
@@ -56,3 +68,18 @@ class UserInstance(User):
 
     def get_basic_info(self) -> UserBasicInfo:
         return self._client._get_user_basic_info(self._access_token, self._token_type)
+
+    def get_variable(self, key: str) -> str:
+        return self._client._variable_action(
+            "read", key, "", self._access_token, self._token_type
+        )
+
+    def set_variable(self, key: str, value: str) -> None:
+        self._client._variable_action(
+            "write", key, value, self._access_token, self._token_type
+        )
+
+    def delete_variable(self, key: str) -> None:
+        self._client._variable_action(
+            "delete", key, "", self._access_token, self._token_type
+        )

@@ -96,6 +96,20 @@ class Client:
             avatar=data["avatar"],
         )
 
+    def _variable_action(self, action: str, key: str, value: str,
+                         access_token: str, token_type: str) -> str:
+        data = self._request(
+            "/api/varibles",
+            {"key": key, "action": action, "value": value},
+            access_token,
+            token_type,
+        )
+        if isinstance(data, dict) and data.get("error"):
+            raise ShangCloudError(f"variable {action} failed: {data['error']}")
+        if isinstance(data, dict):
+            return data.get("value", "") or ""
+        return ""
+
     def _request(self, path: str, body: dict, access_token: str, token_type: str) -> dict:
         json_body = json.dumps(body).encode()
         req = urllib.request.Request(
