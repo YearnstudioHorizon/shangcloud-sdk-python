@@ -18,3 +18,14 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/YearnstudioHorizon/shangcloud-sdk-python"
+
+[tool.semantic_release]
+version_variable = [
+    "pyproject.toml:project.version"
+]
+version_toml = ["pyproject.toml:project.version"]
+
+build_command = "pip install build && python -m build"
+
+changelog_file = "CHANGELOG.md"
+build_command = "pip install build && python -m build"
