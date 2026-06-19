@@ -8,7 +8,7 @@ import urllib.parse
 import urllib.request
 
 from .exceptions import AuthError, ShangCloudError, StateNotFoundError
-from .models import UserBasicInfo
+from .models import MMOJoinRoomResponse, MMONewRoomResponse, UserBasicInfo
 from .storage import RamKv, TempVarStorage
 from .user import User, UserInstance
 
@@ -109,6 +109,75 @@ class Client:
         if isinstance(data, dict):
             return data.get("value", "") or ""
         return ""
+
+    def _mmo_request(self, path: str, body: dict, access_token: str, token_type: str,
+                     room_id: str = "", protocol: str = "") -> dict:
+        headers: dict = {
+            "Content-Type": "application/json",
+            "Authorization": f"{token_type} {access_token}",
+        }
+        if room_id:
+            headers["X-MMO-Room"] = room_id
+        if protocol:
+            headers["X-MMO-Protoctl"] = protocol
+        json_body = json.dumps(body).encode()
+        req = urllib.request.Request(
+            f"{self.base_url}{path}",
+            data=json_body,
+            method="POST",
+            headers=headers,
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            body_text = e.read().decode()
+            raise ShangCloudError(
+                f"Server returned error status: {e.code}, body: {body_text}"
+            ) from e
+
+    def mmo_new_room(self, access_token: str, token_type: str, protocol: str = "") -> MMONewRoomResponse:
+        data = self._mmo_request("/api/mmo/room/new", {}, access_token, token_type, protocol=protocol)
+        return MMONewRoomResponse(
+            connect_key=data["connect_key"],
+            edge_url=data["edge_url"],
+            room_id=data["room_id"],
+            protocol=data["protocol"],
+        )
+
+    def mmo_join_room(self, access_token: str, token_type: str, room_id: str, protocol: str = "") -> MMOJoinRoomResponse:
+        data = self._mmo_request("/api/mmo/room/join", {}, access_token, token_type, room_id=room_id, protocol=protocol)
+        return MMOJoinRoomResponse(
+            connect_key=data["connect_key"],
+            edge_url=data["edge_url"],
+            room_id=data["room_id"],
+            protocol=data["protocol"],
+            assigned_uid=data.get("assigned_uid"),
+        )
+
+    def mmo_set_room_config(self, access_token: str, token_type: str, room_id: str, allow_multi_login: bool) -> None:
+        self._mmo_request("/api/mmo/room/config", {"allow_multi_login": allow_multi_login}, access_token, token_type, room_id=room_id)
+
+    def mmo_set_room_data(self, access_token: str, token_type: str, room_id: str,
+                          key: str, value, data_type: str = "") -> None:
+        body = {"key": key, "value": value}
+        if data_type:
+            body["type"] = data_type
+        self._mmo_request("/api/mmo/room/data/set", body, access_token, token_type, room_id=room_id)
+
+    def mmo_get_room_data(self, access_token: str, token_type: str, room_id: str) -> dict:
+        data = self._mmo_request("/api/mmo/room/data/get", {}, access_token, token_type, room_id=room_id)
+        return data.get("extra_data", {})
+
+    def mmo_delete_room_data(self, access_token: str, token_type: str, room_id: str, key: str) -> None:
+        self._mmo_request("/api/mmo/room/data/delete", {"key": key}, access_token, token_type, room_id=room_id)
+
+    def mmo_kick_user(self, access_token: str, token_type: str, room_id: str, target_uid: str) -> None:
+        self._mmo_request("/api/mmo/room/kick", {"target_uid": target_uid}, access_token, token_type, room_id=room_id)
+
+    def mmo_get_room_user_count(self, access_token: str, token_type: str, room_id: str) -> int:
+        data = self._mmo_request("/api/mmo/room/usercount", {}, access_token, token_type, room_id=room_id)
+        return int(data["user_count"])
 
     def _request(self, path: str, body: dict, access_token: str, token_type: str) -> dict:
         json_body = json.dumps(body).encode()

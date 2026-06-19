@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .client import Client
 
-from .models import UserBasicInfo
+from .models import MMOJoinRoomResponse, MMONewRoomResponse, UserBasicInfo
 
 
 class User(ABC):
@@ -83,3 +83,27 @@ class UserInstance(User):
         self._client._variable_action(
             "delete", key, "", self._access_token, self._token_type
         )
+
+    def new_room(self, protocol: str = "") -> MMONewRoomResponse:
+        return self._client.mmo_new_room(self._access_token, self._token_type, protocol)
+
+    def join_room(self, room_id: str, protocol: str = "") -> MMOJoinRoomResponse:
+        return self._client.mmo_join_room(self._access_token, self._token_type, room_id, protocol)
+
+    def set_room_config(self, room_id: str, allow_multi_login: bool) -> None:
+        self._client.mmo_set_room_config(self._access_token, self._token_type, room_id, allow_multi_login)
+
+    def set_room_data(self, room_id: str, key: str, value, data_type: str = "") -> None:
+        self._client.mmo_set_room_data(self._access_token, self._token_type, room_id, key, value, data_type)
+
+    def get_room_data(self, room_id: str) -> dict:
+        return self._client.mmo_get_room_data(self._access_token, self._token_type, room_id)
+
+    def delete_room_data(self, room_id: str, key: str) -> None:
+        self._client.mmo_delete_room_data(self._access_token, self._token_type, room_id, key)
+
+    def kick_user(self, room_id: str, target_uid: str) -> None:
+        self._client.mmo_kick_user(self._access_token, self._token_type, room_id, target_uid)
+
+    def get_room_user_count(self, room_id: str) -> int:
+        return self._client.mmo_get_room_user_count(self._access_token, self._token_type, room_id)
