@@ -36,6 +36,12 @@ class Client:
     def set_scope(self, scope: str) -> None:
         self.scope = scope
 
+    def append_scope(self, scope: str) -> None:
+        if self.scope:
+            self.scope += f" {scope}"
+        else:
+            self.scope = scope
+
     def _generate_authorize_header(self) -> str:
         raw = f"{self.client_id}:{self._client_secret}"
         return base64.b64encode(raw.encode()).decode()

@@ -61,7 +61,19 @@ client = Client.init_client("client-id", "client-secret", "https://example.com/c
 # 覆盖默认值
 client.scope    = "user:basic"
 client.base_url = "https://api.yearnstudio.cn"
+
+# 或者使用方法设置 scope
+client.set_scope("user:basic mmo")
+client.append_scope("mmo")
 ```
+
+### `client.set_scope(scope: str) -> None`
+
+覆盖并设置当前的 scope，比如对于 MMO 应用，需要设置为 `user:basic mmo`。
+
+### `client.append_scope(scope: str) -> None`
+
+在当前 scope 的基础上增加新的 scope（自动使用空格分隔），例如默认有 `user:basic` 时调用 `append_scope("mmo")` 后，scope 将变为 `user:basic mmo`。
 
 ### `client.generate_oauth_url() -> str`
 
